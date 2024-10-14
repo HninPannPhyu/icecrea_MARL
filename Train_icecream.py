@@ -28,7 +28,6 @@ def create_agents(bs_set,app_set,beta):
     agents_lts=[None]   # 1 dimensional-index agents for large time scale
     for bs in bs_set:
         for app in app_set:
-
             if app == 'Facebook':
                 app_ = 0
             elif app == 'Youtube':
@@ -47,9 +46,8 @@ def Average(lst):
 
 def train_network(epochs,beta):
     allBS = range(62)
-    exclu = np.array([1, 35,36, 47, 48])
+    exclu = np.array([1, 35,36, 47, 48]) #lots of missing data for those base station number
     bs_set = np.setdiff1d(allBS, exclu)
-    #bs_set = [0, 54, 45, 12]
     app_set = ['Facebook', 'Youtube', 'Google']
     n_agents_sts = len(bs_set) * len(app_set)
     n_agents_lts=len(bs_set)
@@ -92,7 +90,6 @@ def train_network(epochs,beta):
             for j in range(1,n_agents_lts+1):
                 agent_lts=agents_lts[j]
                 config,target_bs=agent_lts.step_and_action(e // 10, j, avg_qos_lts_save, energy_lts_save)
-                #print(f'config_{config}, target_bs{target_bs}')
                 config_lts[j][e // 10]=config
                 modified_df = pd.DataFrame({f'config_{target_bs}bs': config},index=[0])
                 config_lst.append(pd.Series(modified_df[f'config_{target_bs}bs']))
@@ -143,11 +140,9 @@ def train_network(epochs,beta):
                 avg_qos_bef=avg_qos[i][:]
                 avg_qos_bef[np.isinf(avg_qos_bef)]=0   #replace inf with zero
                 avg_qos_bef_lts[i-1]=Average(avg_qos_bef[e-9:e])
-                #print(f'Avg{Average(avg_qos_bef[e-9:e])}')
                 energy_slice_bef=energy_slice[i][:] 
                 energy_slice_bef[np.isinf(energy_slice_bef)]=0 #replace inf with zero
                 energy_slice_bef_lts[i-1]=sum(energy_slice_bef[e-9:e])
-                #print(f'energyslice{sum(energy_slice_bef[e-9:e])}')
                 energy_eco_bef=energy_eco[i][:] 
                 energy_eco_bef[np.isinf(energy_eco_bef)]=0 
                 energy_eco_bef_lts[i-1]=sum(energy_eco_bef[e-9:e])
@@ -196,15 +191,12 @@ def train_network(epochs,beta):
             for j in range(1, n_agents_lts + 1):
                 agent_lts = agents_lts[j]
                 loss_ = agent_lts.loss_fn(global_reward_lts, j,beta)
-                # losses[i].append(loss_sts.item()) #for each agent_sts
                 loss_lts[j][e//10] = loss_.item()
                 print(f'Epoch {e + 1}  LargeAgent{j} \t\t   Loss: {format(loss_, ".3f")}')
-
 
         for i in range(1, n_agents_sts + 1):
             agent_sts=agents_sts[i]
             loss_=agent_sts.loss_fn(global_reward_sts, i)
-            #losses[i].append(loss_sts.item()) #for each agent_sts
             loss_sts[i][e]=loss_.item()
             print( f'Epoch {e + 1}  Agent{i} \t\t   Loss: {format(loss_, ".3f")}')
 
@@ -212,142 +204,79 @@ def train_network(epochs,beta):
 
 
 def main() -> None:
-    epochs =2000
+    epochs =3000
     beta=5 #qos impacting factor
     Rewards_lts,Rewards_sts,Regrets_lts,Regrets_sts,Global_Rewards_lts,Global_Rewards_sts,Avg_QoS_lts,Avg_QoS_sts,Energy_Slice_lts,Energy_Slice_sts,Energy_Eco,Loss_lts,Loss_sts,config_lts,n_agents_lts,n_agents_sts= train_network(epochs, beta)
 
-    hist_csv1 = pd.DataFrame(
-        {'Global_rewards_sts': Global_Rewards_sts}
-    )
-    hist_csv_file1 = r'/home/hnin2021/projects/rrg-naboulsi/hnin2021/Dataset/Results1/Small_Results_global_reward_{}.csv'.format(beta)
-    with open(hist_csv_file1, mode='w', newline="") as f:
-        hist_csv1.to_csv(f)
 
-    hist_csv2 = pd.DataFrame(
-        {'Global_rewards_lts': Global_Rewards_lts}
-    )
-    hist_csv_file2 = r'/home/hnin2021/projects/rrg-naboulsi/hnin2021/Dataset/Results1/Large_Results_global_reward_{}.csv'.format(beta)
-    with open(hist_csv_file2, mode='w', newline="") as f:
-        hist_csv2.to_csv(f)
-
-
-    for j in range(1, n_agents_lts + 1):
-
-        hist_csv = pd.DataFrame(
-            {f'Config': config_lts[j]}
-        )
-        hist_csv_file4 = f'/home/hnin2021/projects/rrg-naboulsi/hnin2021/Results1/Large_Results_config_{j}_agent_{beta}beta.csv'
-        with open(hist_csv_file4, mode='w', newline="") as f:
-            hist_csv.to_csv(f)
-
-    for i in range(1, n_agents_sts + 1):
-
-        hist_csv = pd.DataFrame(
-            {f'Rewards_agent': Rewards_sts[i],
-             f'Regrets_agent':Regrets_sts[i],
-             f'Avg_QoS_agent':Avg_QoS_sts[i],
-             f'Energy_Slice_agent':Energy_Slice_sts[i],
-             f'Energy_Eco_agent':Energy_Eco[i],
-             f'Loss_agent':Loss_sts[i]}
-        )
-        hist_csv_file3 = f'/home/hnin2021/projects/rrg-naboulsi/hnin2021/Dataset/Results1/Small_Results_rewards_qos_energy_loss_{i}_agent_{beta}beta.csv'
-        with open(hist_csv_file3, mode='w', newline="") as f:
-            hist_csv.to_csv(f)
-
-    for j in range(1, n_agents_lts + 1):
-
-        hist_csv = pd.DataFrame(
-            {f'Rewards_agent': Rewards_lts[j],
-             f'Regrets_agent':Regrets_lts[j],
-             f'Avg_QoS_agent':Avg_QoS_lts[j],
-             f'Energy_Slice_agent':Energy_Slice_lts[j],
-             f'Loss_agent':Loss_lts[j]}
-        )
-        hist_csv_file4 = f'/home/hnin2021/projects/rrg-naboulsi/hnin2021/Dataset/Results1/Large_Results_rewards_qos_energy_loss_{j}_agent_{beta}beta.csv'
-        with open(hist_csv_file4, mode='w', newline="") as f:
-            hist_csv.to_csv(f)
-
-
-    Fig_main = plt.figure(f'/home/hnin2021/projects/rrg-naboulsi/hnin2021/Dataset/Results1/Small_DMAB_globalreward_{beta}beta.png')
+    Fig_main = plt.figure(f'./Small_DMAB_globalreward_{beta}beta.png')
     plt.plot(running_mean(Global_Rewards_sts, window=50), label="Global reward")
     plt.xlabel('Epochs')
     plt.ylabel('Global Rewards Small Time Scale')
     plt.title('Global Rewards Small Time Scale')
     plt.legend()
     plt.show()
-    Fig_main.savefig(f'/home/hnin2021/projects/rrg-naboulsi/hnin2021/Dataset/Results1/Small_DMAB_globalreward_{beta}beta.png')
 
-    Fig_main = plt.figure(f'/home/hnin2021/projects/rrg-naboulsi/hnin2021/Results1/Large_DMAB_globalreward_{beta}beta.png')
+    Fig_main = plt.figure(f'./Large_DMAB_globalreward_{beta}beta.png')
     plt.plot(running_mean(Global_Rewards_lts, window=50), label="Global reward")
     plt.xlabel('Epochs')
     plt.ylabel('Global Rewards Large Time Scale')
     plt.title('Global Rewards Large Time Scale')
     plt.legend()
     plt.show()
-    Fig_main.savefig(f'/home/hnin2021/projects/rrg-naboulsi/hnin2021/Dataset/Results1/Large_DMAB_globalreward_{beta}beta.png')
 
     for j in range(1, n_agents_lts + 1):
         Fig_main1 = plt.figure(
-            f'/home/hnin2021/projects/rrg-naboulsi/hnin2021/Dataset/Results1/Large_DMAB_reward_{j}_{beta}beta.png')
+            f'./Large_DMAB_reward_{j}_{beta}beta.png')
         plt.plot(running_mean(Rewards_lts[j], window=50), label="avg reward lts")
         plt.xlabel('Epochs')
         plt.ylabel(f'Rewards_lts{j}')
         plt.title(f'EQ_Rewards_{j}_basestation_{beta}beta')
         plt.legend()
-        # plt.show()
-        Fig_main1.savefig(f'/home/hnin2021/projects/rrg-naboulsi/hnin2021/Dataset/Results1/Large_DMAB_reward_{j}_{beta}beta.png')
-        #
-
+        plt.show()
+        
         Fig_main2 = plt.figure(
-            r'/home/hnin2021/projects/rrg-naboulsi/hnin2021/Dataset/Results1/Large_DMAB_Regrets_{}_{}beta.png'.format(j, beta))
+            r'./Large_DMAB_Regrets_{}_{}beta.png'.format(j, beta))
         plt.plot(running_mean(Loss_lts[j], window=50), label="Regrets_lts")
         plt.xlabel('Epochs')
         plt.ylabel(f'Regrets_lts{j}')
         plt.title(f'Regrets_lts{j}')
         plt.legend()
         # plt.show()
-        Fig_main2.savefig(
-            r'/home/hnin2021/projects/rrg-naboulsi/hnin2021/Dataset/Results1/Large_DMAB_Regrets_{}_{}beta.png'.format(j, beta))
-
+        
         Fig_main3 = plt.figure(
-            r'/home/hnin2021/projects/rrg-naboulsi/hnin2021/Dataset/Results1/Large-DMAB_qos_{}_{}beta.png'.format(j, beta))
+            r'./Large-DMAB_qos_{}_{}beta.png'.format(j, beta))
         plt.plot(running_mean(Avg_QoS_lts[j], window=50), label="Avg_QoS_lts")
         plt.xlabel('Epochs')
         plt.ylabel(f'QoS{j}')
         plt.title(f'QoS{j}')
         plt.legend()
-        # plt.show()
-        Fig_main3.savefig(
-            r'/home/hnin2021/projects/rrg-naboulsi/hnin2021/Dataset/Results1/Large_DMAB_qos_{}_{}beta.png'.format(j, beta))
-
+        plt.show()
+       
     for i in range (1, n_agents_sts + 1):
-        Fig_main1 = plt.figure(f'/home/hnin2021/projects/rrg-naboulsi/hnin2021/Dataset/Results1/Small_DMAB_reward_{i}_{beta}beta.png')
+        Fig_main1 = plt.figure(f'./Small_DMAB_reward_{i}_{beta}beta.png')
         plt.plot(running_mean(Rewards_sts[i], window=50), label="avg reward")
         plt.xlabel('Epochs')
         plt.ylabel(f'Rewards_sts{i}')
         plt.title(f'EQ_Rewards_{i}_agent_{beta}beta')
         plt.legend()
         #plt.show()
-        Fig_main1.savefig(f'/home/hnin2021/projects/rrg-naboulsi/hnin2021/Dataset/Results1/Small_DMAB_reward_{i}_{beta}beta.png')
-    #
-
-        Fig_main2 = plt.figure(r'/home/hnin2021/projects/rrg-naboulsi/hnin2021/Dataset/Results1/Small_DMAB_Loss_{}_{}beta.png'.format(i,beta))
+        
+        Fig_main2 = plt.figure(r'./Small_DMAB_Loss_{}_{}beta.png'.format(i,beta))
         plt.plot(running_mean(Loss_sts[i], window=50), label="Loss_sts")
         plt.xlabel('Epochs')
         plt.ylabel(f'Loss_sts{i}')
         plt.title(f'Loss_sts{i}')
         plt.legend()
-        #plt.show()
-        Fig_main2.savefig(r'/home/hnin2021/projects/rrg-naboulsi/hnin2021/Dataset/Results1/Small_DMAB_Loss_{}_{}beta.png'.format(i,beta))
+        plt.show()
 
-        Fig_main3 = plt.figure(r'/home/hnin2021/projects/rrg-naboulsi/hnin2021/Dataset/Results1/Small-DMAB_qos_{}_{}beta.png'.format(i,beta))
+        Fig_main3 = plt.figure(r'./Small-DMAB_qos_{}_{}beta.png'.format(i,beta))
         plt.plot(running_mean(Avg_QoS_sts[i], window=50), label="Avg_QoS_sts")
         plt.xlabel('Epochs')
         plt.ylabel(f'QoS{i}')
         plt.title(f'QoS{i}')
         plt.legend()
-        #plt.show()
-        Fig_main3.savefig(r'/home/hnin2021/projects/rrg-naboulsi/hnin2021/Dataset/Results1/Small_DMAB_qos_{}_{}beta.png'.format(i,beta))
+        plt.show()
 
 if __name__ == "__main__":
     main()
