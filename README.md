@@ -17,12 +17,12 @@ The project is evaluated using **real-world traffic and user data from the Orang
 
 This project consists of two main agents, along with a custom environment, to solve the joint problem of slice activation/deactivation and user association.
 
-### 1. Slice Agent (`slice_agent.py`)
+### 1. Slice Agent (`Slice_agent.py`)
 - **Timescale**: Short
 - **Purpose**: The slice agent operates on a short timescale to handle rapid changes in network conditions. It decides the user association to specific slice instance (including EcoSlice) considering the impact on the neighboring basestation.
 
 
-### 2. Base Station Agent (`basestation_agent.py`)
+### 2. Base Station Agent (`Basestation_agent.py`)
 - **Timescale**: Large
 - **Purpose**: The base station agent operates over a longer timescale. It decides when to activate or deactivate specific slices based on current traffic demand.
 
