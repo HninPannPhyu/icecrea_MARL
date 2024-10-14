@@ -30,6 +30,10 @@ This project consists of two main agents, along with a custom environment, to so
 - **Purpose**: This environment is designed to simulate the interaction between the slice and base station agents in a real-world setting. It processes the data inputs (from traffic datasets like Orange or Netmob) and facilitates the decision-making process for the agents.
 
 
+### 4. Training Module (`Train_icecream.py`)
+- **Purpose**: This module handles the training process for both the slice and base station agents using a **global reward** system. The global reward ensures that both agents cooperate to optimize the network's overall energy efficiency and QoS performance.
+
+
 ## Running the Project
 
 To run the project on a server (i.e. compute canada linux server), a **bash script** is provided to streamline the setup and execution process.
